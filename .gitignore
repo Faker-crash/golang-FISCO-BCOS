@@ -1,0 +1,6 @@
+conf/
+log/
+tool/
+go.mod
+go.sum
+nohub.out
