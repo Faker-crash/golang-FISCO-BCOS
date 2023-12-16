@@ -10,6 +10,8 @@ import (
 	"time"
 	"sync"
 	"log"
+	// "io/ioutil"
+	// "encoding/json"
 )
 var (
 	dbInstance *gorm.DB
@@ -33,7 +35,7 @@ type Commodity struct {//添加一个flag 标志
 	StoryDetail			string `gorm:"type:text;not null"`
 	PublicAddress string `gorm:"not null "` //用户的公钥作为外键
 	IsSold	     bool	`gorm:"default:false"`
-}
+}//先删除记录，再新增
 type User struct {
 	//User has many commodities
     UserID     int    `gorm:"primaryKey;AUTO_INCREMENT"`
@@ -42,12 +44,20 @@ type User struct {
 	PrivateKey string `gorm:"not null"`
 }
 type Trade struct {
-	//User has many commodities
+	//User has many trade
     TradeID     int    `gorm:"primaryKey;AUTO_INCREMENT"`
     SellerAddress string `gorm:"not null "`
     BuyerAddress string `gorm:"not null "`
 	Price   int  `gorm:"not null "`
 	CommodityID int `gorm:"not null"`
+	Time          time.Time     `gorm:"not null;default:current_timestamp;type:timestamp"`
+}
+type Comment struct {
+	//User has many comments(故事的评论表)
+    CommentID     int    `gorm:"primaryKey;AUTO_INCREMENT"`
+	SID	    int 	`gorm:"not null"` //故事id
+	UserAddress 		string 	`gorm:"not null"`//用户公钥地址
+	Info 		string `gorm:"not null "`
 	Time          time.Time     `gorm:"not null;default:current_timestamp;type:timestamp"`
 }
 func Init()*gorm.DB{
@@ -117,6 +127,19 @@ func CreateTradeTable(){
 		fmt.Println(err)
 	}
 	fmt.Println("创建成功")
+}
+func CreateCommentTable(){
+	db := Init() // 获取数据库操作指针
+    if db == nil {
+        fmt.Println("数据库连接失败")
+        return
+    }
+	migrator := db.Migrator()
+	migrator.CreateTable(&Comment{})
+    // if err := db.AutoMigrate(&Comment{}).Error; err != nil {
+    //     fmt.Println(err)
+    // }
+    fmt.Println("评论表创建成功")
 }
 func RecreateUserTable(){
 	db := Init()
@@ -315,4 +338,27 @@ func SearchUserGoodsDetail(address string)([]Commodity,error){
 		return []Commodity{},err
 	}
 	return commoditylist,nil
+}
+func SearchUserComment(storyid int)([]Comment,error){
+	db :=Init()
+	var commentlist []Comment
+	if err:=db.Where("s_id = ?", storyid).Limit(3).Order("Time desc").Find(&commentlist).Error;err!=nil{
+		return []Comment{},err
+	}
+	return commentlist,nil//根据时间返回最近的前三条
+}
+func InsertUserComment(useraddress string,storyid int ,info string)(error){
+	//将用户评论插入
+	db :=Init()
+	comment :=Comment{
+		UserAddress:useraddress,
+		SID:storyid,
+		Info:info,
+	}
+	if err:=db.Create(&comment).Error;err!=nil{
+		return err
+	}else{
+		return nil
+	}
+
 }

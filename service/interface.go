@@ -92,13 +92,7 @@ func ReleaseGoods(c *gin.Context){
 			"msg": "上传失败,图片非jpg,png,jpeg,gif,请重新上传！",
 		})
 		return
-	} else if pic.Size/1024 > 2000 {
-		log.Println("上传图片大于2M,请重新上传")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"msg": "上传图片大于2M,请重新上传",
-		})
-		return
-	} else {
+	}else {
 		f, err := pic.Open()
 		if err != nil {
 			log.Println(err)
@@ -438,6 +432,53 @@ func ReturnUserReleaseGoodsHistory(c *gin.Context){
 		}else{
 			c.JSON(http.StatusOK ,gin.H{
 				"commoditylist":list,
+			})
+		}
+	}
+}
+func ReleaseComment(c *gin.Context){
+	//用户发表评论
+	useraddress := c.Query("useraddress")
+	storyid := c.Query("storyid")
+	comment := c.Query("comment")
+	fmt.Println("评论内容为:",comment)
+	fmt.Println("用户公钥地址为:",useraddress)
+	fmt.Println("故事id为,",storyid)
+	sid, _ := strconv.Atoi(storyid)
+	if comment!=""{//如果评论内容不为空
+		err := InsertUserComment(useraddress,sid,comment)
+		if err!=nil{
+			c.JSON(http.StatusInternalServerError,gin.H{
+				"msg":err,
+			})
+		}else{
+			c.JSON(http.StatusOK ,gin.H{
+				"msg":"success",
+			})
+		}
+	}else{
+		c.JSON(http.StatusOK,gin.H{
+			"msg":"comment is none,error",
+		})
+	}
+}
+func ReturnStoryComment(c *gin.Context){
+	//返回每个故事底下的评论内容(前三条)
+	storyid := c.Query("storyid")
+	id, _ := strconv.Atoi(storyid)
+	list,err := SearchUserComment(id)//根据故事id返回评论内容
+	if err!=nil{
+		c.JSON(http.StatusInternalServerError,gin.H{
+			"msg":err,
+		})
+	}else{
+		if list==nil{
+			c.JSON(http.StatusOK,gin.H{
+				"msg":"not found",
+			})
+		}else{
+			c.JSON(http.StatusOK ,gin.H{
+				"commentlist":list,
 			})
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	// "fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/cors"
+
 	// "github.com/gorilla/mux"
 	// "github.com/gorilla/handlers"
 	// "net/http"
@@ -11,6 +12,7 @@ import (
 )
 
 func main() {
+	// service.CreateCommentTable()
 	// router := mux.NewRouter()//开启cors服务
 	r := gin.Default()        //默认的路由引擎
 	r.Use(cors.Default())
@@ -28,6 +30,9 @@ func main() {
 	r.GET("/goodsitemsell",service.ReturnSellGoodsItem)//localhost:9090/goodsitemsell?address=
 
 	r.POST("/confirmorder", service.ConfirmOrderBySeller)//localhost:9090/confirmorder
+
+	r.GET("/searchcomment",service.ReturnStoryComment)
+	r.POST("/releasecomment",service.ReleaseComment)
 
 	//启动服务
 	r.Run(":9090")//请求地址 url:9090/servicename
